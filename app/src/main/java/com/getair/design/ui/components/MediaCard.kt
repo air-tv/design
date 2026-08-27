@@ -29,6 +29,7 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.getair.design.model.MediaItem
 import com.getair.design.model.IptvLiveInfo
+import com.getair.design.model.clockRange
 import com.getair.design.ui.theme.AirBorderWidth
 import com.getair.design.ui.theme.AirCardShape
 
@@ -103,7 +104,7 @@ fun LandscapeMediaCard(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                "${liveInfo.now.start}–${liveInfo.now.end}  ${liveInfo.now.title}",
+                                "${liveInfo.now.clockRange()}  ${liveInfo.now.title}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.White.copy(alpha = 0.78f),
                                 maxLines = 1,

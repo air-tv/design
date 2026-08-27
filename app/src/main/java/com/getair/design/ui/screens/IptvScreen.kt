@@ -45,10 +45,11 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Tab
 import androidx.tv.material3.TabRow
 import androidx.tv.material3.Text
-import com.getair.design.model.EpgProgram
 import com.getair.design.model.IptvLiveInfo
 import com.getair.design.model.MediaItem
 import com.getair.design.model.StaticData
+import com.getair.design.model.clockRange
+import com.getair.iptv.model.EpgProgramme
 import com.getair.design.ui.IptvRoute
 import com.getair.design.ui.components.PosterMediaCard
 import com.getair.design.ui.focus.requestFocusSafely
@@ -187,7 +188,7 @@ private fun LiveGuide(
         Column(Modifier.weight(1f)) {
             Text("Now on ${selected.title}", style = MaterialTheme.typography.headlineSmall)
             Text(
-                "${info.now.start}–${info.now.end}  •  ${info.group}  •  ${info.streamFormat}",
+                "${info.now.clockRange()}  •  ${info.group}  •  ${info.streamFormat}",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 6.dp),
             )
@@ -197,7 +198,7 @@ private fun LiveGuide(
                 modifier = Modifier.padding(top = 20.dp),
             )
             Text(
-                info.now.description,
+                info.now.description.orEmpty(),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
             )
@@ -211,7 +212,7 @@ private fun LiveGuide(
 }
 
 @Composable
-private fun ProgramCard(program: EpgProgram, selected: Boolean, onClick: () -> Unit) {
+private fun ProgramCard(program: EpgProgramme, selected: Boolean, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier.width(165.dp).height(112.dp),
@@ -229,7 +230,7 @@ private fun ProgramCard(program: EpgProgram, selected: Boolean, onClick: () -> U
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
     ) {
         Column(Modifier.padding(14.dp)) {
-            Text("${program.start}–${program.end}", style = MaterialTheme.typography.labelMedium)
+            Text(program.clockRange(), style = MaterialTheme.typography.labelMedium)
             Text(program.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, modifier = Modifier.padding(top = 8.dp))
         }
     }

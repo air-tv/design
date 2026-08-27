@@ -1,6 +1,25 @@
 package com.getair.design.model
 
 import androidx.compose.ui.graphics.Color
+import com.getair.iptv.model.CategoryId
+import com.getair.iptv.model.CategoryKind
+import com.getair.iptv.model.ChannelId
+import com.getair.iptv.model.ChannelKind
+import com.getair.iptv.model.EpgChannelId
+import com.getair.iptv.model.EpgProgramme
+import com.getair.iptv.model.EpisodeId
+import com.getair.iptv.model.IptvCategory
+import com.getair.iptv.model.IptvChannel
+import com.getair.iptv.model.IptvEpisode
+import com.getair.iptv.model.IptvMovie
+import com.getair.iptv.model.IptvSeries
+import com.getair.iptv.model.IptvSeriesDetails
+import com.getair.iptv.model.IptvSourceKind
+import com.getair.iptv.model.MovieId
+import com.getair.iptv.model.SeriesId
+import com.getair.stremio.model.Meta
+import com.getair.stremio.model.Video
+import kotlinx.datetime.Instant
 
 object StaticData {
     private val blue = ArtworkPalette(Color(0xFF17243D), Color(0xFF365A8B), Color(0xFF91A9D2))
@@ -18,17 +37,18 @@ object StaticData {
         description = "A science teacher wakes up alone on a spaceship and uncovers a mission to save Earth's sun.",
         kind = MediaKind.Movie,
         palette = blue,
-        info = StremioInfo(
-            title = "Project Hail Mary",
-            description = "A science teacher wakes up alone on a spaceship. As his memory returns, he uncovers a mission to stop a mysterious substance killing Earth's sun, and realizes that an unexpected friendship may be the key.",
+        info = StremioInfo(Meta(
+            id = "tt12042730",
             type = "movie",
+            name = "Project Hail Mary",
+            description = "A science teacher wakes up alone on a spaceship. As his memory returns, he uncovers a mission to stop a mysterious substance killing Earth's sun, and realizes that an unexpected friendship may be the key.",
             releaseInfo = "2026",
             imdbRating = "8.2",
             runtime = "157 min",
             genres = listOf("Adventure", "Comedy", "Drama"),
             director = listOf("Phil Lord", "Christopher Miller"),
             cast = listOf("Ryan Gosling", "Sandra Hüller", "James Ortiz"),
-        ),
+        )),
     )
 
     val stremioMovies = listOf(
@@ -108,17 +128,16 @@ object StaticData {
         description = "Static Stremio catalog metadata for the Android TV layout study.",
         kind = MediaKind.Movie,
         palette = palette,
-        info = StremioInfo(
-            title = title,
-            description = "Static Stremio catalog metadata for the Android TV layout study.",
+        info = StremioInfo(Meta(
+            id = id,
             type = "movie",
+            name = title,
+            description = "Static Stremio catalog metadata for the Android TV layout study.",
             releaseInfo = year,
             imdbRating = rating,
             runtime = runtime,
             genres = genres.toList(),
-            director = emptyList(),
-            cast = emptyList(),
-        ),
+        )),
     )
 
     private fun stremioSeries(id: String, title: String, palette: ArtworkPalette) = MediaItem(
@@ -127,22 +146,21 @@ object StaticData {
         description = "A static series record shaped like Stremio meta and video resources.",
         kind = MediaKind.Series,
         palette = palette,
-        info = StremioInfo(
-            title = title,
-            description = "A static series record shaped like Stremio meta and video resources.",
+        info = StremioInfo(Meta(
+            id = id,
             type = "series",
+            name = title,
+            description = "A static series record shaped like Stremio meta and video resources.",
             releaseInfo = "2024–",
             imdbRating = "8.0",
             runtime = "52 min",
             genres = listOf("Drama", "Mystery"),
-            director = emptyList(),
-            cast = emptyList(),
             videos = listOf(
-                EpisodeInfo(1, 1, "First Signal", "A new signal changes the town overnight."),
-                EpisodeInfo(1, 2, "Open Channel", "The group follows the transmission north."),
-                EpisodeInfo(1, 3, "Dead Air", "Silence reveals what the signal was hiding."),
+                Video("$id:1:1", "First Signal", season = 1, episode = 1, overview = "A new signal changes the town overnight."),
+                Video("$id:1:2", "Open Channel", season = 1, episode = 2, overview = "The group follows the transmission north."),
+                Video("$id:1:3", "Dead Air", season = 1, episode = 3, overview = "Silence reveals what the signal was hiding."),
             ),
-        ),
+        )),
     )
 
     private fun liveChannel(
@@ -153,25 +171,47 @@ object StaticData {
         programme: String,
         start: String,
         end: String,
-    ) = MediaItem(
-        id = "live-$number",
-        title = name,
-        description = programme,
-        kind = MediaKind.Live,
-        palette = palette,
-        info = IptvLiveInfo(
+    ): MediaItem {
+        val channelId = ChannelId(number)
+        val epgId = EpgChannelId("mock-channel-$number")
+        val categoryId = CategoryId("mock-${group.lowercase().replace(' ', '-')}")
+        val startInstant = mockInstant(start)
+        val endInstant = mockInstant(end)
+        val laterEnd = Instant.fromEpochMilliseconds(endInstant.toEpochMilliseconds() + 3_600_000)
+        val latestEnd = Instant.fromEpochMilliseconds(laterEnd.toEpochMilliseconds() + 3_600_000)
+        return MediaItem(
+            id = "live-$number",
             title = name,
-            description = "$programme is live now on $name.",
-            channelNumber = number,
-            group = group,
-            streamFormat = "HLS",
-            now = EpgProgram(start, end, programme, "Current programme synopsis from XMLTV EPG data."),
-            upcoming = listOf(
-                EpgProgram(end, "+60 min", "Up next", "The next scheduled programme."),
-                EpgProgram("+60 min", "+120 min", "Later", "Later programme from the guide."),
+            description = programme,
+            kind = MediaKind.Live,
+            palette = palette,
+            info = IptvLiveInfo(
+                channel = IptvChannel(
+                    id = channelId,
+                    name = name,
+                    streamUrl = "https://mock.invalid/live/$number.m3u8",
+                    source = IptvSourceKind.Xtream,
+                    kind = ChannelKind.Live,
+                    number = number.toDouble(),
+                    categoryIds = listOf(categoryId),
+                    epgChannelId = epgId,
+                ),
+                category = IptvCategory(categoryId, group, CategoryKind.Live),
+                streamFormat = "HLS",
+                now = EpgProgramme(
+                    channelId = epgId,
+                    start = startInstant,
+                    end = endInstant,
+                    title = programme,
+                    description = "Current programme synopsis from XMLTV EPG data.",
+                ),
+                upcoming = listOf(
+                    EpgProgramme(epgId, endInstant, laterEnd, "Up next", description = "The next scheduled programme."),
+                    EpgProgramme(epgId, laterEnd, latestEnd, "Later", description = "Later programme from the guide."),
+                ),
             ),
-        ),
-    )
+        )
+    }
 
     private fun iptvVod(
         id: String,
@@ -182,24 +222,59 @@ object StaticData {
         rating: String,
         duration: String,
         palette: ArtworkPalette,
-    ) = MediaItem(
-        id = id,
-        title = title,
-        description = "Static IPTV ${kind.name.lowercase()} information for the design route.",
-        kind = kind,
-        palette = palette,
-        info = IptvVodInfo(
+    ): MediaItem {
+        val description = "Static IPTV ${kind.name.lowercase()} information for the design route."
+        val categoryId = CategoryId("mock-${category.lowercase().replace(' ', '-')}")
+        val categoryContract = IptvCategory(
+            id = categoryId,
+            name = category,
+            kind = if (kind == MediaKind.Movie) CategoryKind.Movie else CategoryKind.Series,
+        )
+        val movie = if (kind == MediaKind.Movie) {
+            IptvMovie(
+                id = MovieId(id),
+                name = title,
+                streamUrl = "https://mock.invalid/movie/$id.mkv",
+                categoryIds = listOf(categoryId),
+                containerExtension = "mkv",
+                year = year,
+                plot = description,
+                genre = category,
+                rating = rating.toDouble(),
+            )
+        } else null
+        val series = if (kind == MediaKind.Series) {
+            val seriesId = SeriesId(id)
+            IptvSeriesDetails(
+                series = IptvSeries(
+                    id = seriesId,
+                    name = title,
+                    categoryIds = listOf(categoryId),
+                    year = year,
+                    plot = description,
+                    genre = category,
+                    rating = rating.toDouble(),
+                ),
+                episodes = listOf(
+                    IptvEpisode(EpisodeId("$id-1-1"), seriesId, "Arrival", 1.0, 1.0, "https://mock.invalid/series/$id/1-1.mkv", "mkv", "The first episode in the provider response."),
+                    IptvEpisode(EpisodeId("$id-1-2"), seriesId, "Crossing", 1.0, 2.0, "https://mock.invalid/series/$id/1-2.mkv", "mkv", "The story moves beyond the city."),
+                ),
+            )
+        } else null
+        return MediaItem(
+            id = id,
             title = title,
-            description = "Static IPTV ${kind.name.lowercase()} information for the design route.",
-            type = kind,
-            category = category,
-            year = year,
-            rating = rating,
-            duration = duration,
-            episodes = if (kind == MediaKind.Series) listOf(
-                EpisodeInfo(1, 1, "Arrival", "The first episode in the provider response."),
-                EpisodeInfo(1, 2, "Crossing", "The story moves beyond the city."),
-            ) else emptyList(),
-        ),
-    )
+            description = description,
+            kind = kind,
+            palette = palette,
+            info = IptvVodInfo(
+                movie = movie,
+                series = series,
+                categoryContract = categoryContract,
+                durationLabel = duration,
+            ),
+        )
+    }
+
+    private fun mockInstant(clock: String): Instant = Instant.parse("2026-08-27T${clock}:00Z")
 }

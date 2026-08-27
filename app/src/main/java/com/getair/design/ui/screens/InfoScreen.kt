@@ -53,6 +53,7 @@ import com.getair.design.model.IptvLiveInfo
 import com.getair.design.model.IptvVodInfo
 import com.getair.design.model.MediaItem
 import com.getair.design.model.StremioInfo
+import com.getair.design.model.clockRange
 import com.getair.design.ui.components.ColorArtwork
 import com.getair.design.ui.components.MediaFacts
 import com.getair.design.ui.components.mediaKicker
@@ -214,8 +215,8 @@ private fun LiveDetails(info: IptvLiveInfo) {
     Column(Modifier.padding(start = 132.dp, end = 58.dp, top = 28.dp, bottom = 28.dp)) {
         Text("Now", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 24.dp))
         Text(info.now.title, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = 8.dp))
-        Text("${info.now.start}–${info.now.end}", color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 6.dp))
-        Text(info.now.description, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.width(720.dp).padding(top = 12.dp))
+        Text(info.now.clockRange(), color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 6.dp))
+        Text(info.now.description.orEmpty(), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.width(720.dp).padding(top = 12.dp))
         Text("EPG", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 28.dp, bottom = 14.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             items(listOf(info.now) + info.upcoming) { program ->
@@ -226,7 +227,7 @@ private fun LiveDetails(info: IptvLiveInfo) {
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f), MaterialTheme.shapes.extraSmall)
                         .padding(16.dp)
                 ) {
-                    Text("${program.start}–${program.end}", style = MaterialTheme.typography.labelMedium)
+                    Text(program.clockRange(), style = MaterialTheme.typography.labelMedium)
                     Text(program.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, modifier = Modifier.padding(top = 8.dp))
                 }
             }

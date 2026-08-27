@@ -2,6 +2,12 @@ package com.getair.design.model
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import com.getair.iptv.model.EpgProgramme
+import com.getair.iptv.model.IptvCategory
+import com.getair.iptv.model.IptvChannel
+import com.getair.iptv.model.IptvMovie
+import com.getair.iptv.model.IptvSeriesDetails
+import com.getair.stremio.model.Meta
 
 @Immutable
 data class ArtworkPalette(
@@ -30,17 +36,26 @@ sealed interface MediaInfo {
 
 @Immutable
 data class StremioInfo(
-    override val title: String,
-    override val description: String,
-    val type: String,
-    val releaseInfo: String,
-    val imdbRating: String,
-    val runtime: String,
-    val genres: List<String>,
-    val director: List<String>,
-    val cast: List<String>,
-    val videos: List<EpisodeInfo> = emptyList(),
-) : MediaInfo
+    val meta: Meta,
+) : MediaInfo {
+    override val title get() = meta.name
+    override val description get() = meta.description.orEmpty()
+    val type get() = meta.type
+    val releaseInfo get() = meta.releaseInfo.orEmpty()
+    val imdbRating get() = meta.imdbRating.orEmpty()
+    val runtime get() = meta.runtime.orEmpty()
+    val genres get() = meta.genres
+    val director get() = meta.director
+    val cast get() = meta.cast
+    val videos get() = meta.videos.map {
+        EpisodeInfo(
+            season = it.season ?: 0,
+            episode = it.episode ?: 0,
+            title = it.title,
+            overview = it.overview.orEmpty(),
+        )
+    }
+}
 
 @Immutable
 data class EpisodeInfo(
@@ -52,34 +67,48 @@ data class EpisodeInfo(
 
 @Immutable
 data class IptvLiveInfo(
-    override val title: String,
-    override val description: String,
-    val channelNumber: String,
-    val group: String,
+    val channel: IptvChannel,
+    val category: IptvCategory,
     val streamFormat: String,
-    val now: EpgProgram,
-    val upcoming: List<EpgProgram>,
-) : MediaInfo
+    val now: EpgProgramme,
+    val upcoming: List<EpgProgramme>,
+) : MediaInfo {
+    override val title get() = channel.name
+    override val description get() = now.description.orEmpty()
+    val channelNumber get() = channel.number?.toInt()?.toString().orEmpty()
+    val group get() = category.name
+}
 
 @Immutable
 data class IptvVodInfo(
-    override val title: String,
-    override val description: String,
-    val type: MediaKind,
-    val category: String,
-    val year: String,
-    val rating: String,
-    val duration: String,
-    val episodes: List<EpisodeInfo> = emptyList(),
-) : MediaInfo
+    val movie: IptvMovie? = null,
+    val series: IptvSeriesDetails? = null,
+    val categoryContract: IptvCategory,
+    val durationLabel: String,
+) : MediaInfo {
+    init {
+        require((movie == null) xor (series == null)) { "Exactly one IPTV VOD contract is required" }
+    }
 
-@Immutable
-data class EpgProgram(
-    val start: String,
-    val end: String,
-    val title: String,
-    val description: String,
-)
+    override val title get() = movie?.name ?: requireNotNull(series).series.name
+    override val description get() = movie?.plot ?: series?.series?.plot.orEmpty()
+    val type get() = if (movie != null) MediaKind.Movie else MediaKind.Series
+    val category get() = categoryContract.name
+    val year get() = movie?.year ?: series?.series?.year.orEmpty()
+    val rating get() = (movie?.rating ?: series?.series?.rating)?.toString().orEmpty()
+    val duration get() = durationLabel
+    val episodes get() = series?.episodes.orEmpty().map {
+        EpisodeInfo(
+            season = it.season.toInt(),
+            episode = it.episode.toInt(),
+            title = it.title,
+            overview = it.plot.orEmpty(),
+        )
+    }
+}
+
+fun EpgProgramme.clockRange(): String =
+    "${start.toString().substring(11, 16)}–${end?.toString()?.substring(11, 16) ?: "—"}"
 
 @Immutable
 data class Profile(

@@ -16,3 +16,10 @@ dependencyResolutionManagement {
 
 rootProject.name = "AirTvDesign"
 include(":app")
+
+listOf(
+    "../stremio-addon-client",
+    "../iptv",
+).map(::file)
+    .filter { it.resolve("settings.gradle.kts").isFile }
+    .forEach { includeBuild(it) }

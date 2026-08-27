@@ -16,6 +16,11 @@ The primary shell uses a fixed, opaque JetFit-derived icon rail with Profiles at
 
 All media artwork is represented by deterministic color gradients so layout, scrims, focus, scale, and contrast can be evaluated without pretending that generated imagery is production content.
 
+The displayed records instantiate the real normalized contracts from the sibling
+Kotlin Multiplatform libraries through Gradle composite substitution. Every
+record is fictional, every URL uses `mock.invalid`, and this repository contains
+no provider credentials or addon configuration.
+
 ## Run
 
 ```bash
