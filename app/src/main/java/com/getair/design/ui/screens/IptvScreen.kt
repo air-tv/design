@@ -74,11 +74,14 @@ fun IptvScreen(
                 modifier = Modifier
                     .width(360.dp)
                     .onPreviewKeyEvent {
-                        if (it.key == Key.DirectionLeft && it.type == KeyEventType.KeyDown) {
+                        if (
+                            route == IptvRoute.Live &&
+                            it.key == Key.DirectionLeft &&
+                            it.type == KeyEventType.KeyDown
+                        ) {
                             sideNavigationFocusRequester.requestFocusSafely()
                         } else false
-                    }
-                    .focusProperties { left = sideNavigationFocusRequester },
+                    },
             ) {
                 IptvRoute.entries.forEachIndexed { index, tab ->
                     val tabFocusRequester = if (tab == IptvRoute.Live) {
@@ -91,7 +94,15 @@ fun IptvScreen(
                             onContentFocused(tabFocusRequester)
                         },
                         onClick = { route = tab },
-                        modifier = Modifier.focusRequester(tabFocusRequester),
+                        modifier = Modifier
+                            .focusRequester(tabFocusRequester)
+                            .then(
+                                if (tab == IptvRoute.Live) {
+                                    Modifier.focusProperties { left = sideNavigationFocusRequester }
+                                } else {
+                                    Modifier
+                                }
+                            ),
                     ) {
                         Text(
                             text = tab.label,
