@@ -50,6 +50,10 @@ import com.getair.design.model.clockRange
 import com.getair.design.ui.components.ColorArtwork
 import com.getair.design.ui.focus.requestFocusSafely
 import com.getair.design.ui.theme.AirButtonShape
+import com.getair.video.PlaybackKind
+import com.getair.video.PlaybackState
+import com.getair.video.PlaybackStatus
+import com.getair.video.PlaybackTimeline
 
 @Composable
 fun PlayerScreen(
@@ -57,6 +61,19 @@ fun PlayerScreen(
     onBack: () -> Unit,
 ) {
     val liveInfo = item.info as? IptvLiveInfo
+    val playbackState = remember(item.id) {
+        PlaybackState(
+            status = PlaybackStatus.Ready,
+            playWhenReady = true,
+            isPlaying = true,
+            positionMillis = if (liveInfo == null) 3_798_000 else 0,
+            timeline = if (liveInfo == null) {
+                PlaybackTimeline(PlaybackKind.OnDemand, durationMillis = 9_420_000)
+            } else {
+                PlaybackTimeline(PlaybackKind.Live)
+            },
+        )
+    }
     val primaryFocusRequester = remember { FocusRequester() }
     var controlsVisible by remember(item.id) { mutableStateOf(true) }
 
@@ -124,7 +141,7 @@ fun PlayerScreen(
                     modifier = Modifier.padding(top = 6.dp),
                 )
 
-                if (liveInfo == null) {
+                if (playbackState.timeline?.showSeekBar == true) {
                     Box(
                         Modifier
                             .fillMaxWidth()
@@ -141,7 +158,7 @@ fun PlayerScreen(
                     }
                 } else {
                     Text(
-                        "Up next  ${liveInfo.upcoming.firstOrNull()?.title ?: "No guide data"}",
+                        "Up next  ${liveInfo?.upcoming?.firstOrNull()?.title ?: "No guide data"}",
                         color = Color.White.copy(alpha = 0.68f),
                         modifier = Modifier.padding(top = 18.dp),
                     )

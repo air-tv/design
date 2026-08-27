@@ -20,6 +20,7 @@ include(":app")
 listOf(
     "../stremio-addon-client",
     "../iptv",
+    "../video",
 ).map(::file)
     .filter { it.resolve("settings.gradle.kts").isFile }
     .forEach { includeBuild(it) }
