@@ -65,6 +65,7 @@ fun InfoScreen(
     item: MediaItem,
     sideNavigationFocusRequester: FocusRequester,
     contentEntryFocusRequester: FocusRequester,
+    onPlay: (MediaItem) -> Unit,
     onContentFocused: (FocusRequester) -> Unit,
 ) {
     LazyColumn(
@@ -76,6 +77,7 @@ fun InfoScreen(
                 item,
                 sideNavigationFocusRequester,
                 contentEntryFocusRequester,
+                onPlay,
                 onContentFocused,
             )
         }
@@ -94,6 +96,7 @@ private fun InfoHero(
     item: MediaItem,
     sideNavigationFocusRequester: FocusRequester,
     contentEntryFocusRequester: FocusRequester,
+    onPlay: (MediaItem) -> Unit,
     onContentFocused: (FocusRequester) -> Unit,
 ) {
     LaunchedEffect(item.id) { contentEntryFocusRequester.requestFocusSafely() }
@@ -174,7 +177,7 @@ private fun InfoHero(
             MediaFacts(item, Modifier.padding(top = 18.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 20.dp)) {
                 Button(
-                    onClick = {},
+                    onClick = { onPlay(item) },
                     modifier = Modifier.focusProperties { left = sideNavigationFocusRequester },
                     shape = ButtonDefaults.shape(AirButtonShape),
                     scale = ButtonDefaults.scale(scale = 1f),

@@ -6,6 +6,7 @@ enum class AppRoute(val label: String) {
     Settings("Settings"),
     Profiles("Profiles"),
     Info("Info"),
+    Player("Player"),
 }
 
 enum class IptvRoute(val label: String) {

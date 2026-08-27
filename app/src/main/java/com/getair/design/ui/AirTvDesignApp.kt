@@ -24,6 +24,7 @@ import com.getair.design.ui.screens.HomeScreen
 import com.getair.design.ui.screens.InfoScreen
 import com.getair.design.ui.screens.IptvScreen
 import com.getair.design.ui.screens.ProfilesScreen
+import com.getair.design.ui.screens.PlayerScreen
 import com.getair.design.ui.screens.SettingsScreen
 import com.getair.design.ui.theme.AirTheme
 
@@ -46,9 +47,15 @@ fun AirTvDesignApp(onExit: () -> Unit) {
             route = AppRoute.Info
         }
 
+        fun showPlayer(item: MediaItem) {
+            selectedItem = item
+            route = AppRoute.Player
+        }
+
         BackHandler {
             when (route) {
                 AppRoute.Info -> route = previousRoute
+                AppRoute.Player -> route = AppRoute.Info
                 else -> when {
                     !isSideNavigationFocused -> {
                         focusRequestEpoch += 1
@@ -66,7 +73,7 @@ fun AirTvDesignApp(onExit: () -> Unit) {
                         .fillMaxSize()
                         .padding(
                             start = when (route) {
-                                AppRoute.Home, AppRoute.Info -> 0.dp
+                                AppRoute.Home, AppRoute.Info, AppRoute.Player -> 0.dp
                                 else -> MainContentInset
                             }
                         )
@@ -100,21 +107,28 @@ fun AirTvDesignApp(onExit: () -> Unit) {
                             selectedItem,
                             selectedDestinationFocusRequester,
                             contentEntryFocusRequester,
+                            onPlay = ::showPlayer,
                             onContentFocused = { lastContentFocusRequester = it },
+                        )
+                        AppRoute.Player -> PlayerScreen(
+                            item = selectedItem,
+                            onBack = { route = AppRoute.Info },
                         )
                     }
                 }
-                SideNavigation(
-                    selectedRoute = if (route == AppRoute.Info) previousRoute else route,
-                    onRouteSelected = { route = it },
-                    focusRequestEpoch = focusRequestEpoch,
-                    contentEntryFocusRequester = contentEntryFocusRequester,
-                    restoreContentFocusRequester = lastContentFocusRequester,
-                    forceRouteSelection = route == AppRoute.Info,
-                    selectedDestinationFocusRequester = selectedDestinationFocusRequester,
-                    requestInitialFocus = route != AppRoute.Info,
-                    onFocusChanged = { isSideNavigationFocused = it },
-                )
+                if (route != AppRoute.Player) {
+                    SideNavigation(
+                        selectedRoute = if (route == AppRoute.Info) previousRoute else route,
+                        onRouteSelected = { route = it },
+                        focusRequestEpoch = focusRequestEpoch,
+                        contentEntryFocusRequester = contentEntryFocusRequester,
+                        restoreContentFocusRequester = lastContentFocusRequester,
+                        forceRouteSelection = route == AppRoute.Info,
+                        selectedDestinationFocusRequester = selectedDestinationFocusRequester,
+                        requestInitialFocus = route != AppRoute.Info,
+                        onFocusChanged = { isSideNavigationFocused = it },
+                    )
+                }
             }
         }
     }

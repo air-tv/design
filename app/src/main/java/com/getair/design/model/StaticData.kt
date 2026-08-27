@@ -206,7 +206,7 @@ object StaticData {
                     description = "Current programme synopsis from XMLTV EPG data.",
                 ),
                 upcoming = listOf(
-                    EpgProgramme(epgId, endInstant, laterEnd, "Up next", description = "The next scheduled programme."),
+                    EpgProgramme(epgId, endInstant, laterEnd, "Following programme", description = "The next scheduled programme."),
                     EpgProgramme(epgId, laterEnd, latestEnd, "Later", description = "Later programme from the guide."),
                 ),
             ),

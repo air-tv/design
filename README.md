@@ -11,6 +11,7 @@ A static Android TV design application used to inspect Air's real Compose UI on 
 - **IPTV / Movies** — five-column provider movie grid.
 - **Settings** — JetStream-style two-column settings with Playback, Subtitles & Audio, Appearance, Sources, Advanced, and About sections.
 - **Info** — one composition with independent branches for Stremio metadata, IPTV live + EPG, and IPTV VOD/series data.
+- **Player** — backend-neutral TV controls for VOD and live playback; VOD has progress/seek treatment while live playback intentionally has no seek bar.
 
 The primary shell uses a fixed, opaque JetFit-derived icon rail with Profiles at the top and Home, IPTV, and Settings centered. IPTV alone keeps a Training-style top tab row for Live, Series, and Movies. Home heroes and Info use the JetFit Challenge-details hierarchy: right-anchored artwork, directional scrims, source/type kicker, three compact facts, and left-aligned actions. Landscape shelves fit four complete cards at 1080p, and Appearance includes a true-black OLED mode.
 
