@@ -20,7 +20,8 @@ All media artwork is represented by deterministic color gradients so layout, scr
 The displayed records instantiate the real normalized contracts from the sibling
 Kotlin Multiplatform libraries through Gradle composite substitution. Media uses
 the Stremio/IPTV contracts; household profiles and every working settings toggle
-use Air core's `HouseholdState`, `ProfilePreferences`, and `DeviceSettings`.
+use Air core's `HouseholdState`, `ProfilePreferences`, `DeviceSettings`, and
+non-secret `LocalSourceState` metadata.
 Every record is fictional, every URL uses `mock.invalid`, and this repository
 contains no provider credentials or addon configuration.
 

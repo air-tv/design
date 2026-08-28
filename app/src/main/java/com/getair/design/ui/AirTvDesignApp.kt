@@ -101,6 +101,7 @@ fun AirTvDesignApp(onExit: () -> Unit) {
                             onContentFocused = { lastContentFocusRequester = it },
                             deviceSettings = householdState.deviceSettings,
                             profilePreferences = selectedPreferences,
+                            sourceState = StaticData.localSourceState,
                             onDeviceSettingsChange = { settings ->
                                 if (settings != householdState.deviceSettings) {
                                     householdState = householdState.copy(

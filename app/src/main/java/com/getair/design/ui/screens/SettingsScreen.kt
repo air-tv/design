@@ -51,6 +51,8 @@ import com.getair.core.household.LiveTvBuffer
 import com.getair.core.household.ProfilePreferences
 import com.getair.core.household.ResumePolicy
 import com.getair.core.household.StreamQuality
+import com.getair.core.source.LocalSourceKind
+import com.getair.core.source.LocalSourceState
 import com.getair.design.ui.focus.requestFocusSafely
 import com.getair.design.ui.theme.AirCardShape
 
@@ -70,6 +72,7 @@ fun SettingsScreen(
     onContentFocused: (FocusRequester) -> Unit,
     deviceSettings: DeviceSettings,
     profilePreferences: ProfilePreferences,
+    sourceState: LocalSourceState,
     onDeviceSettingsChange: (DeviceSettings) -> Unit,
     onProfilePreferencesChange: (ProfilePreferences) -> Unit,
 ) {
@@ -124,6 +127,7 @@ fun SettingsScreen(
             section = section,
             deviceSettings = deviceSettings,
             profilePreferences = profilePreferences,
+            sourceState = sourceState,
             onDeviceSettingsChange = onDeviceSettingsChange,
             onProfilePreferencesChange = onProfilePreferencesChange,
             panelEntryFocusRequester = panelEntryFocusRequesters[section.ordinal],
@@ -137,6 +141,7 @@ private fun SettingsPanel(
     section: SettingsSection,
     deviceSettings: DeviceSettings,
     profilePreferences: ProfilePreferences,
+    sourceState: LocalSourceState,
     onDeviceSettingsChange: (DeviceSettings) -> Unit,
     onProfilePreferencesChange: (ProfilePreferences) -> Unit,
     panelEntryFocusRequester: FocusRequester,
@@ -203,8 +208,10 @@ private fun SettingsPanel(
                 )
             }
             SettingsSection.Sources -> {
-                SettingValue("Stremio addons", "3 installed", focusRequester = panelEntryFocusRequester)
-                SettingValue("IPTV providers", "1 connected")
+                val addonCount = sourceState.profiles.count { it.kind == LocalSourceKind.StremioAddon }
+                val iptvCount = sourceState.profiles.size - addonCount
+                SettingValue("Stremio addons", "$addonCount installed", focusRequester = panelEntryFocusRequester)
+                SettingValue("IPTV providers", "$iptvCount connected")
                 SettingValue("Refresh catalogs", "Every ${deviceSettings.catalogRefreshMinutes / 60} hours")
                 SettingValue(
                     "Local network sources",

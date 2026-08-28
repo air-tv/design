@@ -5,6 +5,10 @@ import com.getair.core.household.HouseholdProfile
 import com.getair.core.household.HouseholdProfileId
 import com.getair.core.household.HouseholdState
 import com.getair.core.household.ProfilePreferences
+import com.getair.core.source.LocalSourceId
+import com.getair.core.source.LocalSourceKind
+import com.getair.core.source.LocalSourceProfile
+import com.getair.core.source.LocalSourceState
 import com.getair.iptv.model.CategoryId
 import com.getair.iptv.model.CategoryKind
 import com.getair.iptv.model.ChannelId
@@ -122,6 +126,15 @@ object StaticData {
         profilePreferences = listOf("living-room", "alex", "sam", "kids").associate {
             HouseholdProfileId(it) to ProfilePreferences()
         },
+    )
+
+    val localSourceState = LocalSourceState(
+        profiles = listOf(
+            LocalSourceProfile(LocalSourceId("metadata"), "Metadata", LocalSourceKind.StremioAddon),
+            LocalSourceProfile(LocalSourceId("streams"), "Streams", LocalSourceKind.StremioAddon),
+            LocalSourceProfile(LocalSourceId("subtitles"), "Subtitles", LocalSourceKind.StremioAddon),
+            LocalSourceProfile(LocalSourceId("living-tv"), "Living TV", LocalSourceKind.Xtream),
+        ),
     )
 
     fun profilePalette(id: HouseholdProfileId): ArtworkPalette = when (id.value) {
