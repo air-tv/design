@@ -9,5 +9,6 @@
 - `air-player-test.mkv` is generated test media, not application content. Keep playback offline; never replace it with a provider or addon URL.
 - The sibling builds are included through Gradle composite substitution; Maven coordinates remain `com.getair:air`, `com.getair:stremio-addon-client`, `com.getair:iptv`, and `com.getair:video` so the app can switch to published artifacts without source changes.
 - Preserve D-pad focus, Back behavior, 3dp focus outlines, fixed focus scale, 5% safe margins, and Material 3 for TV components.
+- Player option panels use the exact Air audio/subtitle/video track contracts and restore focus to the trigger on selection or Back. Labels must follow confirmed native selection events; never flash an optimistic track. Plain live shows EPG/up-next information and never renders seek controls, while DVR may use the shared seekable-live timeline.
 - Profiles, Settings, Home, IPTV Live/Series/Movies, and the polymorphic Info screen must remain reachable in the static app.
 - Run `./gradlew :app:assembleDebug` after changes and install on the Android TV emulator for visual work.
