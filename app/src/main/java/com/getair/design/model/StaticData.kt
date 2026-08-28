@@ -88,11 +88,23 @@ object StaticData {
                 watchProgress(stremioMovies[3], 18),
                 watchProgress(stremioSeries[2], 81),
             ),
+            HouseholdProfileId("alex") to listOf(
+                watchProgress(stremioMovies[1], 33),
+                watchProgress(stremioSeries[1], 12),
+            ),
+            HouseholdProfileId("sam") to listOf(
+                watchProgress(stremioSeries[3], 54),
+                watchProgress(stremioMovies[5], 27),
+            ),
+            HouseholdProfileId("kids") to listOf(
+                watchProgress(stremioMovies[4], 61),
+                watchProgress(stremioSeries[4], 15),
+            ),
         ),
     )
 
-    val continueWatching = continueWatchingState.entriesByProfile
-        .getValue(HouseholdProfileId("living-room"))
+    fun continueWatching(profileId: HouseholdProfileId): List<MediaItem> =
+        continueWatchingState.entriesByProfile.getValue(profileId)
         .mapNotNull { progress ->
             (stremioMovies + stremioSeries)
                 .firstOrNull { item -> item.id == (progress.content as? OnDemandContentRef.Stremio)?.id }

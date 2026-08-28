@@ -25,6 +25,7 @@ import com.getair.design.ui.components.RowCardStyle
 @Composable
 fun HomeScreen(
     onItemSelected: (MediaItem) -> Unit,
+    continueWatching: List<MediaItem>,
     sideNavigationFocusRequester: FocusRequester,
     contentEntryFocusRequester: FocusRequester,
     onContentFocused: (FocusRequester) -> Unit,
@@ -56,7 +57,7 @@ fun HomeScreen(
         item(contentType = "ContinueWatching") {
             MediaRow(
                 title = "Continue watching",
-                items = StaticData.continueWatching,
+                items = continueWatching,
                 cardStyle = RowCardStyle.Landscape,
                 onItemSelected = onItemSelected,
                 firstItemFocusRequester = continueWatchingFocusRequester,

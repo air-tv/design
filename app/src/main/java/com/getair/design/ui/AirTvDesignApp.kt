@@ -84,9 +84,12 @@ fun AirTvDesignApp(onExit: () -> Unit) {
                 ) {
                     when (route) {
                         AppRoute.Home -> HomeScreen(
-                            ::showInfo,
-                            selectedDestinationFocusRequester,
-                            contentEntryFocusRequester,
+                            onItemSelected = ::showInfo,
+                            continueWatching = StaticData.continueWatching(
+                                requireNotNull(householdState.selectedProfileId),
+                            ),
+                            sideNavigationFocusRequester = selectedDestinationFocusRequester,
+                            contentEntryFocusRequester = contentEntryFocusRequester,
                             onContentFocused = { lastContentFocusRequester = it },
                         )
                         AppRoute.Iptv -> IptvScreen(
