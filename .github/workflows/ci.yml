@@ -19,18 +19,11 @@ jobs:
       - uses: actions/checkout@v7
         with:
           path: design
-      - uses: actions/checkout@v7
-        with:
-          repository: get-air/stremio-addon-client
-          path: stremio-addon-client
-      - uses: actions/checkout@v7
-        with:
-          repository: get-air/iptv
-          path: iptv
-      - uses: actions/checkout@v7
-        with:
-          repository: get-air/video
-          path: video
+      - name: Check out public contract repositories
+        run: |
+          git clone --depth 1 https://github.com/get-air/stremio-addon-client.git ../stremio-addon-client
+          git clone --depth 1 https://github.com/get-air/iptv.git ../iptv
+          git clone --depth 1 https://github.com/get-air/video.git ../video
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
