@@ -21,10 +21,10 @@ jobs:
           path: design
       - name: Check out public contract repositories
         run: |
-          git clone --depth 1 https://github.com/get-air/air.git ../air
-          git clone --depth 1 https://github.com/get-air/stremio-addon-client.git ../stremio-addon-client
-          git clone --depth 1 https://github.com/get-air/iptv.git ../iptv
-          git clone --depth 1 https://github.com/get-air/video.git ../video
+          git clone --depth 1 https://github.com/air-tv/air.git ../air
+          git clone --depth 1 https://github.com/air-tv/stremio-addon-client.git ../stremio-addon-client
+          git clone --depth 1 https://github.com/air-tv/iptv.git ../iptv
+          git clone --depth 1 https://github.com/air-tv/video.git ../video
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
