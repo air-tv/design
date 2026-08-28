@@ -109,11 +109,3 @@ data class IptvVodInfo(
 
 fun EpgProgramme.clockRange(): String =
     "${start.toString().substring(11, 16)}–${end?.toString()?.substring(11, 16) ?: "—"}"
-
-@Immutable
-data class Profile(
-    val name: String,
-    val initials: String,
-    val palette: ArtworkPalette,
-    val isKids: Boolean = false,
-)

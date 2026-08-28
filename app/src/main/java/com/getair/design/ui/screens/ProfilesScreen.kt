@@ -31,7 +31,9 @@ import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
-import com.getair.design.model.Profile
+import com.getair.core.household.HouseholdProfile
+import com.getair.core.household.HouseholdProfileId
+import com.getair.design.model.ArtworkPalette
 import com.getair.design.model.StaticData
 import com.getair.design.ui.components.ColorArtwork
 import com.getair.design.ui.theme.AirBorderWidth
@@ -42,7 +44,11 @@ fun ProfilesScreen(
     sideNavigationFocusRequester: FocusRequester,
     contentEntryFocusRequester: FocusRequester,
     onContentFocused: (FocusRequester) -> Unit,
+    profiles: List<HouseholdProfile>,
+    selectedProfileId: HouseholdProfileId?,
+    onProfileSelected: (HouseholdProfileId) -> Unit,
 ) {
+    val selectedIndex = profiles.indexOfFirst { it.id == selectedProfileId }.coerceAtLeast(0)
     Column(Modifier.fillMaxSize().padding(horizontal = 58.dp)) {
         Text("Who's watching?", style = MaterialTheme.typography.displaySmall, modifier = Modifier.padding(top = 28.dp))
         Text(
@@ -55,15 +61,18 @@ fun ProfilesScreen(
             contentPadding = PaddingValues(top = 32.dp, bottom = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            itemsIndexed(StaticData.profiles, key = { _, profile -> profile.name }) { index, profile ->
-                val profileFocusRequester = if (index == 0) {
+            itemsIndexed(profiles, key = { _, profile -> profile.id.value }) { index, profile ->
+                val profileFocusRequester = if (index == selectedIndex) {
                     contentEntryFocusRequester
                 } else {
-                    remember(profile.name) { FocusRequester() }
+                    remember(profile.id) { FocusRequester() }
                 }
                 ProfileCard(
-                    profile,
-                    Modifier
+                    profile = profile,
+                    palette = StaticData.profilePalette(profile.id),
+                    selected = profile.id == selectedProfileId,
+                    onClick = { onProfileSelected(profile.id) },
+                    modifier = Modifier
                         .focusRequester(profileFocusRequester)
                         .onFocusChanged {
                             if (it.isFocused) onContentFocused(profileFocusRequester)
@@ -81,9 +90,15 @@ fun ProfilesScreen(
 }
 
 @Composable
-private fun ProfileCard(profile: Profile, modifier: Modifier = Modifier) {
+private fun ProfileCard(
+    profile: HouseholdProfile,
+    palette: ArtworkPalette,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Surface(
-        onClick = {},
+        onClick = onClick,
         modifier = modifier,
         shape = ClickableSurfaceDefaults.shape(AirCardShape),
         border = ClickableSurfaceDefaults.border(
@@ -96,15 +111,19 @@ private fun ProfileCard(profile: Profile, modifier: Modifier = Modifier) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(16.dp)) {
             Box(modifier = Modifier.size(112.dp).clip(CircleShape)) {
-                ColorArtwork(profile.palette, Modifier.fillMaxSize()) {
+                ColorArtwork(palette, Modifier.fillMaxSize()) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(profile.initials, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Medium)
                     }
                 }
             }
             Text(profile.name, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 14.dp))
-            if (profile.isKids) {
-                Text("Kids", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            if (selected || profile.isKids) {
+                Text(
+                    if (selected) "Current" else "Kids",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
         }
     }

@@ -46,6 +46,11 @@ import androidx.tv.material3.Switch
 import androidx.tv.material3.SwitchDefaults
 import androidx.tv.material3.Text
 import androidx.tv.material3.surfaceColorAtElevation
+import com.getair.core.household.DeviceSettings
+import com.getair.core.household.LiveTvBuffer
+import com.getair.core.household.ProfilePreferences
+import com.getair.core.household.ResumePolicy
+import com.getair.core.household.StreamQuality
 import com.getair.design.ui.focus.requestFocusSafely
 import com.getair.design.ui.theme.AirCardShape
 
@@ -63,8 +68,10 @@ fun SettingsScreen(
     sideNavigationFocusRequester: FocusRequester,
     contentEntryFocusRequester: FocusRequester,
     onContentFocused: (FocusRequester) -> Unit,
-    oledMode: Boolean,
-    onOledModeChange: (Boolean) -> Unit,
+    deviceSettings: DeviceSettings,
+    profilePreferences: ProfilePreferences,
+    onDeviceSettingsChange: (DeviceSettings) -> Unit,
+    onProfilePreferencesChange: (ProfilePreferences) -> Unit,
 ) {
     var section by remember { mutableStateOf(SettingsSection.Playback) }
     val sectionFocusRequesters = remember { List(SettingsSection.entries.size) { FocusRequester() } }
@@ -115,8 +122,10 @@ fun SettingsScreen(
         }
         SettingsPanel(
             section = section,
-            oledMode = oledMode,
-            onOledModeChange = onOledModeChange,
+            deviceSettings = deviceSettings,
+            profilePreferences = profilePreferences,
+            onDeviceSettingsChange = onDeviceSettingsChange,
+            onProfilePreferencesChange = onProfilePreferencesChange,
             panelEntryFocusRequester = panelEntryFocusRequesters[section.ordinal],
             modifier = Modifier.weight(1f).padding(start = 52.dp),
         )
@@ -126,8 +135,10 @@ fun SettingsScreen(
 @Composable
 private fun SettingsPanel(
     section: SettingsSection,
-    oledMode: Boolean,
-    onOledModeChange: (Boolean) -> Unit,
+    deviceSettings: DeviceSettings,
+    profilePreferences: ProfilePreferences,
+    onDeviceSettingsChange: (DeviceSettings) -> Unit,
+    onProfilePreferencesChange: (ProfilePreferences) -> Unit,
     panelEntryFocusRequester: FocusRequester,
     modifier: Modifier = Modifier,
 ) {
@@ -135,42 +146,93 @@ private fun SettingsPanel(
         Text(section.label, style = MaterialTheme.typography.headlineSmall)
         when (section) {
             SettingsSection.Playback -> {
-                SettingValue("Autoplay next episode", "On", toggle = true, focusRequester = panelEntryFocusRequester)
-                SettingValue("Preferred stream quality", "Auto")
-                SettingValue("Live TV buffer", "Balanced")
-                SettingValue("Resume playback", "Ask")
+                SettingValue(
+                    "Autoplay next episode",
+                    if (profilePreferences.autoplayNextEpisode) "On" else "Off",
+                    toggle = true,
+                    checked = profilePreferences.autoplayNextEpisode,
+                    onCheckedChange = {
+                        onProfilePreferencesChange(profilePreferences.copy(autoplayNextEpisode = it))
+                    },
+                    focusRequester = panelEntryFocusRequester,
+                )
+                SettingValue("Preferred stream quality", profilePreferences.streamQuality.label)
+                SettingValue("Live TV buffer", profilePreferences.liveTvBuffer.label)
+                SettingValue("Resume playback", profilePreferences.resumePolicy.label)
             }
             SettingsSection.Subtitles -> {
-                SettingValue("Subtitles", "On", toggle = true, focusRequester = panelEntryFocusRequester)
-                SettingValue("Preferred subtitle language", "English")
-                SettingValue("Preferred audio language", "Original")
+                SettingValue(
+                    "Subtitles",
+                    if (profilePreferences.subtitlesEnabled) "On" else "Off",
+                    toggle = true,
+                    checked = profilePreferences.subtitlesEnabled,
+                    onCheckedChange = {
+                        onProfilePreferencesChange(profilePreferences.copy(subtitlesEnabled = it))
+                    },
+                    focusRequester = panelEntryFocusRequester,
+                )
+                SettingValue("Preferred subtitle language", profilePreferences.preferredSubtitleLanguage)
+                SettingValue("Preferred audio language", profilePreferences.preferredAudioLanguage ?: "Original")
                 SettingValue("Subtitle appearance", "System default")
             }
             SettingsSection.Appearance -> {
                 SettingValue(
                     title = "OLED black",
-                    value = if (oledMode) "On" else "Off",
+                    value = if (deviceSettings.oledBlack) "On" else "Off",
                     toggle = true,
-                    checked = oledMode,
-                    onCheckedChange = onOledModeChange,
+                    checked = deviceSettings.oledBlack,
+                    onCheckedChange = { onDeviceSettingsChange(deviceSettings.copy(oledBlack = it)) },
                     focusRequester = panelEntryFocusRequester,
                 )
-                SettingValue("Reduce motion", "Off", toggle = true, initial = false)
-                SettingValue("Poster density", "Comfortable")
-                SettingValue("Show content ratings", "On", toggle = true)
+                SettingValue(
+                    "Reduce motion",
+                    if (deviceSettings.reduceMotion) "On" else "Off",
+                    toggle = true,
+                    checked = deviceSettings.reduceMotion,
+                    onCheckedChange = { onDeviceSettingsChange(deviceSettings.copy(reduceMotion = it)) },
+                )
+                SettingValue("Poster density", deviceSettings.posterDensity.name)
+                SettingValue(
+                    "Show content ratings",
+                    if (profilePreferences.showContentRatings) "On" else "Off",
+                    toggle = true,
+                    checked = profilePreferences.showContentRatings,
+                    onCheckedChange = {
+                        onProfilePreferencesChange(profilePreferences.copy(showContentRatings = it))
+                    },
+                )
             }
             SettingsSection.Sources -> {
                 SettingValue("Stremio addons", "3 installed", focusRequester = panelEntryFocusRequester)
                 SettingValue("IPTV providers", "1 connected")
-                SettingValue("Refresh catalogs", "Every 6 hours")
-                SettingValue("Local network sources", "Off")
+                SettingValue("Refresh catalogs", "Every ${deviceSettings.catalogRefreshMinutes / 60} hours")
+                SettingValue(
+                    "Local network sources",
+                    if (deviceSettings.localNetworkSources) "On" else "Off",
+                    toggle = true,
+                    checked = deviceSettings.localNetworkSources,
+                    onCheckedChange = { onDeviceSettingsChange(deviceSettings.copy(localNetworkSources = it)) },
+                )
             }
             SettingsSection.Advanced -> {
-                SettingValue("Hardware decoding", "On", toggle = true, focusRequester = panelEntryFocusRequester)
-                SettingValue("Decoder policy", "Prefer platform")
-                SettingValue("Network timeout", "15 seconds")
-                SettingValue("Maximum addon response", "10 MiB")
-                SettingValue("Diagnostics overlay", "Off", toggle = true, initial = false)
+                SettingValue(
+                    "Hardware decoding",
+                    if (deviceSettings.hardwareDecoding) "On" else "Off",
+                    toggle = true,
+                    checked = deviceSettings.hardwareDecoding,
+                    onCheckedChange = { onDeviceSettingsChange(deviceSettings.copy(hardwareDecoding = it)) },
+                    focusRequester = panelEntryFocusRequester,
+                )
+                SettingValue("Decoder policy", deviceSettings.decoderPolicy.name.replace("Prefer", "Prefer "))
+                SettingValue("Network timeout", "${deviceSettings.networkTimeoutMillis / 1_000} seconds")
+                SettingValue("Maximum addon response", "${deviceSettings.maximumAddonResponseBytes / (1024 * 1024)} MiB")
+                SettingValue(
+                    "Diagnostics overlay",
+                    if (deviceSettings.diagnosticsOverlay) "On" else "Off",
+                    toggle = true,
+                    checked = deviceSettings.diagnosticsOverlay,
+                    onCheckedChange = { onDeviceSettingsChange(deviceSettings.copy(diagnosticsOverlay = it)) },
+                )
             }
             SettingsSection.About -> {
                 SettingValue("Air TV Design", "0.1.0", focusRequester = panelEntryFocusRequester)
@@ -181,6 +243,29 @@ private fun SettingsPanel(
         }
     }
 }
+
+private val StreamQuality.label: String
+    get() = when (this) {
+        StreamQuality.Auto -> "Auto"
+        StreamQuality.Uhd -> "4K"
+        StreamQuality.FullHd -> "1080p"
+        StreamQuality.Hd -> "720p"
+        StreamQuality.Sd -> "SD"
+    }
+
+private val LiveTvBuffer.label: String
+    get() = when (this) {
+        LiveTvBuffer.LowLatency -> "Low latency"
+        LiveTvBuffer.Balanced -> "Balanced"
+        LiveTvBuffer.Stable -> "Stable"
+    }
+
+private val ResumePolicy.label: String
+    get() = when (this) {
+        ResumePolicy.Ask -> "Ask"
+        ResumePolicy.Resume -> "Resume"
+        ResumePolicy.Restart -> "Restart"
+    }
 
 @Composable
 private fun SettingValue(

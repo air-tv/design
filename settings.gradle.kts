@@ -18,6 +18,7 @@ rootProject.name = "AirTvDesign"
 include(":app")
 
 listOf(
+    "../air",
     "../stremio-addon-client",
     "../iptv",
     "../video",

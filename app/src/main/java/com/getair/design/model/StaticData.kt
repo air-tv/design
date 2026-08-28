@@ -1,6 +1,10 @@
 package com.getair.design.model
 
 import androidx.compose.ui.graphics.Color
+import com.getair.core.household.HouseholdProfile
+import com.getair.core.household.HouseholdProfileId
+import com.getair.core.household.HouseholdState
+import com.getair.core.household.ProfilePreferences
 import com.getair.iptv.model.CategoryId
 import com.getair.iptv.model.CategoryKind
 import com.getair.iptv.model.ChannelId
@@ -107,12 +111,26 @@ object StaticData {
         iptvVod("series-6", "Field Notes", MediaKind.Series, "Documentary", "2022", "8.4", "5 seasons", cyan),
     )
 
-    val profiles = listOf(
-        Profile("Living Room", "LR", blue),
-        Profile("Alex", "A", rust),
-        Profile("Sam", "S", violet),
-        Profile("Kids", "K", gold, isKids = true),
+    val householdState = HouseholdState(
+        profiles = listOf(
+            HouseholdProfile(HouseholdProfileId("living-room"), "Living Room", "LR"),
+            HouseholdProfile(HouseholdProfileId("alex"), "Alex", "A"),
+            HouseholdProfile(HouseholdProfileId("sam"), "Sam", "S"),
+            HouseholdProfile(HouseholdProfileId("kids"), "Kids", "K", isKids = true),
+        ),
+        selectedProfileId = HouseholdProfileId("living-room"),
+        profilePreferences = listOf("living-room", "alex", "sam", "kids").associate {
+            HouseholdProfileId(it) to ProfilePreferences()
+        },
     )
+
+    fun profilePalette(id: HouseholdProfileId): ArtworkPalette = when (id.value) {
+        "living-room" -> blue
+        "alex" -> rust
+        "sam" -> violet
+        "kids" -> gold
+        else -> slate
+    }
 
     private fun stremioMovie(
         id: String,

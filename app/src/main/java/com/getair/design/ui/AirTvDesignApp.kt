@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.LocalContentColor
+import com.getair.core.household.ProfilePreferences
 import com.getair.design.model.MediaItem
 import com.getair.design.model.StaticData
 import com.getair.design.ui.components.SideNavigation
@@ -30,8 +31,8 @@ import com.getair.design.ui.theme.AirTheme
 
 @Composable
 fun AirTvDesignApp(onExit: () -> Unit) {
-    var oledMode by remember { mutableStateOf(false) }
-    AirTheme(oledMode = oledMode) {
+    var householdState by remember { mutableStateOf(StaticData.householdState) }
+    AirTheme(oledMode = householdState.deviceSettings.oledBlack) {
         var route by remember { mutableStateOf(AppRoute.Home) }
         var previousRoute by remember { mutableStateOf(AppRoute.Home) }
         var selectedItem by remember { mutableStateOf<MediaItem>(StaticData.projectHailMary) }
@@ -40,6 +41,9 @@ fun AirTvDesignApp(onExit: () -> Unit) {
         val contentEntryFocusRequester = remember { FocusRequester() }
         val selectedDestinationFocusRequester = remember { FocusRequester() }
         var lastContentFocusRequester by remember { mutableStateOf<FocusRequester?>(null) }
+        val selectedPreferences = householdState.selectedProfileId
+            ?.let(householdState.profilePreferences::get)
+            ?: ProfilePreferences()
 
         fun showInfo(item: MediaItem) {
             selectedItem = item
@@ -95,13 +99,43 @@ fun AirTvDesignApp(onExit: () -> Unit) {
                             selectedDestinationFocusRequester,
                             contentEntryFocusRequester,
                             onContentFocused = { lastContentFocusRequester = it },
-                            oledMode = oledMode,
-                            onOledModeChange = { oledMode = it },
+                            deviceSettings = householdState.deviceSettings,
+                            profilePreferences = selectedPreferences,
+                            onDeviceSettingsChange = { settings ->
+                                if (settings != householdState.deviceSettings) {
+                                    householdState = householdState.copy(
+                                        deviceSettings = settings,
+                                        revision = householdState.revision + 1,
+                                    )
+                                }
+                            },
+                            onProfilePreferencesChange = { preferences ->
+                                householdState.selectedProfileId?.let { profileId ->
+                                    if (preferences != householdState.profilePreferences[profileId]) {
+                                        householdState = householdState.copy(
+                                            profilePreferences = householdState.profilePreferences +
+                                                (profileId to preferences),
+                                            revision = householdState.revision + 1,
+                                        )
+                                    }
+                                }
+                            },
                         )
                         AppRoute.Profiles -> ProfilesScreen(
                             selectedDestinationFocusRequester,
                             contentEntryFocusRequester,
                             onContentFocused = { lastContentFocusRequester = it },
+                            profiles = householdState.profiles,
+                            selectedProfileId = householdState.selectedProfileId,
+                            onProfileSelected = { profileId ->
+                                if (profileId != householdState.selectedProfileId) {
+                                    householdState = householdState.copy(
+                                        selectedProfileId = profileId,
+                                        revision = householdState.revision + 1,
+                                    )
+                                }
+                                route = AppRoute.Home
+                            },
                         )
                         AppRoute.Info -> InfoScreen(
                             selectedItem,
