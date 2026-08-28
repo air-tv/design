@@ -1,6 +1,9 @@
 package com.getair.design.model
 
 import androidx.compose.ui.graphics.Color
+import com.getair.core.history.ContinueWatchingState
+import com.getair.core.history.OnDemandContentRef
+import com.getair.core.history.WatchProgress
 import com.getair.core.household.HouseholdProfile
 import com.getair.core.household.HouseholdProfileId
 import com.getair.core.household.HouseholdState
@@ -77,12 +80,24 @@ object StaticData {
         stremioSeries("tt1475582", "Signal House", moss),
     )
 
-    val continueWatching = listOf(
-        projectHailMary.copy(progress = 0.42f),
-        stremioSeries.first().copy(progress = 0.68f),
-        stremioMovies[3].copy(progress = 0.18f),
-        stremioSeries[2].copy(progress = 0.81f),
+    val continueWatchingState = ContinueWatchingState(
+        entriesByProfile = mapOf(
+            HouseholdProfileId("living-room") to listOf(
+                watchProgress(projectHailMary, 42),
+                watchProgress(stremioSeries.first(), 68),
+                watchProgress(stremioMovies[3], 18),
+                watchProgress(stremioSeries[2], 81),
+            ),
+        ),
     )
+
+    val continueWatching = continueWatchingState.entriesByProfile
+        .getValue(HouseholdProfileId("living-room"))
+        .mapNotNull { progress ->
+            (stremioMovies + stremioSeries)
+                .firstOrNull { item -> item.id == (progress.content as? OnDemandContentRef.Stremio)?.id }
+                ?.copy(progress = progress.fraction)
+        }
 
     val liveChannels = listOf(
         liveChannel("101", "World News", "News", blue, "The Evening Report", "18:00", "19:00"),
@@ -144,6 +159,16 @@ object StaticData {
         "kids" -> gold
         else -> slate
     }
+
+    private fun watchProgress(item: MediaItem, percent: Int): WatchProgress = WatchProgress(
+        content = OnDemandContentRef.Stremio(
+            type = if (item.kind == MediaKind.Movie) "movie" else "series",
+            id = item.id,
+        ),
+        positionMillis = percent * 1_000L,
+        durationMillis = 100_000,
+        updatedAtEpochMillis = 10_000L - percent,
+    )
 
     private fun stremioMovie(
         id: String,
