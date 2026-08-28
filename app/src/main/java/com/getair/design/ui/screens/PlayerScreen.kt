@@ -517,4 +517,4 @@ private fun com.getair.video.PlaybackState.progressFraction(): Float {
 }
 
 private fun List<MediaTrack>.selectedLabel(selectedId: String?, fallback: String): String =
-    firstOrNull { it.id == selectedId }?.label ?: firstOrNull { it.isDefault }?.label ?: fallback
+    firstOrNull { it.id == selectedId }?.label ?: fallback
