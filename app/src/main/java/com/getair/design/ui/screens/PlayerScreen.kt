@@ -1,5 +1,6 @@
 package com.getair.design.ui.screens
 
+import android.view.TextureView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,21 +23,26 @@ import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.HighQuality
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.tv.material3.Button
 import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.Icon
@@ -50,10 +56,9 @@ import com.getair.design.model.clockRange
 import com.getair.design.ui.components.ColorArtwork
 import com.getair.design.ui.focus.requestFocusSafely
 import com.getair.design.ui.theme.AirButtonShape
+import com.getair.video.AndroidMedia3BackendFactory
 import com.getair.video.PlaybackKind
-import com.getair.video.PlaybackState
-import com.getair.video.PlaybackStatus
-import com.getair.video.PlaybackTimeline
+import com.getair.video.PlaybackSource
 
 @Composable
 fun PlayerScreen(
@@ -61,23 +66,30 @@ fun PlayerScreen(
     onBack: () -> Unit,
 ) {
     val liveInfo = item.info as? IptvLiveInfo
-    val playbackState = remember(item.id) {
-        PlaybackState(
-            status = PlaybackStatus.Ready,
-            playWhenReady = true,
-            isPlaying = true,
-            positionMillis = if (liveInfo == null) 3_798_000 else 0,
-            timeline = if (liveInfo == null) {
-                PlaybackTimeline(PlaybackKind.OnDemand, durationMillis = 9_420_000)
-            } else {
-                PlaybackTimeline(PlaybackKind.Live)
-            },
-        )
-    }
+    val context = LocalContext.current
+    val player = remember(context) { AndroidMedia3BackendFactory(context).createAndroidPlayer() }
+    val playbackState by player.state.collectAsState()
+    val audioTracks by player.audioTracks.collectAsState()
+    val subtitleTracks by player.subtitleTracks.collectAsState()
+    val videoTracks by player.videoTracks.collectAsState()
     val primaryFocusRequester = remember { FocusRequester() }
     var controlsVisible by remember(item.id) { mutableStateOf(true) }
 
-    LaunchedEffect(item.id) { primaryFocusRequester.requestFocusSafely() }
+    DisposableEffect(player) {
+        onDispose { player.close() }
+    }
+    LaunchedEffect(item.id, player) {
+        runCatching {
+            player.open(
+                PlaybackSource(
+                    uri = "asset:///air-player-test.mkv",
+                    title = item.title,
+                    kindHint = if (liveInfo == null) PlaybackKind.OnDemand else PlaybackKind.Live,
+                ),
+            )
+        }
+        primaryFocusRequester.requestFocusSafely()
+    }
 
     Box(
         Modifier
@@ -86,6 +98,12 @@ fun PlayerScreen(
     ) {
         ColorArtwork(
             palette = item.palette,
+            modifier = Modifier.fillMaxSize(),
+        )
+        AndroidView(
+            factory = { viewContext ->
+                TextureView(viewContext).also(player::attach)
+            },
             modifier = Modifier.fillMaxSize(),
         )
         Box(
@@ -134,7 +152,8 @@ fun PlayerScreen(
                     if (liveInfo != null) {
                         "${liveInfo.channelNumber}  ${liveInfo.channel.name}  •  ${liveInfo.now.clockRange()}"
                     } else {
-                        "01:03:18  /  02:37:00"
+                        "${playbackState.positionMillis.clock()}  /  " +
+                            "${playbackState.timeline?.durationMillis?.clock() ?: "--:--"}"
                     },
                     color = Color.White.copy(alpha = 0.68f),
                     style = MaterialTheme.typography.bodyMedium,
@@ -151,7 +170,7 @@ fun PlayerScreen(
                     ) {
                         Box(
                             Modifier
-                                .fillMaxWidth(0.41f)
+                                .fillMaxWidth(playbackState.progressFraction())
                                 .fillMaxHeight()
                                 .background(MaterialTheme.colorScheme.primary, CircleShape)
                         )
@@ -170,27 +189,37 @@ fun PlayerScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (liveInfo == null) {
-                        PlayerIconButton(Icons.Default.Replay10, "Back 10 seconds")
+                        PlayerIconButton(Icons.Default.Replay10, "Back 10 seconds") {
+                            player.seekTo(playbackState.positionMillis - 10_000)
+                        }
                     }
                     Button(
-                        onClick = { controlsVisible = true },
+                        onClick = {
+                            controlsVisible = true
+                            if (playbackState.playWhenReady) player.pause() else player.play()
+                        },
                         modifier = Modifier.focusRequester(primaryFocusRequester),
                         shape = ButtonDefaults.shape(AirButtonShape),
                         scale = ButtonDefaults.scale(scale = 1f),
                     ) {
-                        Icon(Icons.Default.Pause, contentDescription = null)
+                        Icon(
+                            if (playbackState.playWhenReady) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = null,
+                        )
                         Spacer(Modifier.width(8.dp))
-                        Text("Pause")
+                        Text(if (playbackState.playWhenReady) "Pause" else "Play")
                     }
                     if (liveInfo == null) {
-                        PlayerIconButton(Icons.Default.FastForward, "Forward")
+                        PlayerIconButton(Icons.Default.FastForward, "Forward") {
+                            player.seekTo(playbackState.positionMillis + 30_000)
+                        }
                     }
 
                     Spacer(Modifier.weight(1f))
-                    TrackButton(Icons.Default.Audiotrack, "Audio", "English 5.1")
-                    TrackButton(Icons.Default.ClosedCaption, "Subtitles", "English")
-                    TrackButton(Icons.Default.HighQuality, "Quality", if (liveInfo != null) "Auto" else "4K")
-                    PlayerIconButton(Icons.Default.MoreHoriz, "Advanced")
+                    TrackButton(Icons.Default.Audiotrack, "Audio", audioTracks.selectedLabel("Default"))
+                    TrackButton(Icons.Default.ClosedCaption, "Subtitles", subtitleTracks.selectedLabel("Off"))
+                    TrackButton(Icons.Default.HighQuality, "Quality", videoTracks.selectedLabel("Auto"))
+                    PlayerIconButton(Icons.Default.MoreHoriz, "Advanced") {}
                 }
             }
         }
@@ -198,8 +227,12 @@ fun PlayerScreen(
 }
 
 @Composable
-private fun PlayerIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, description: String) {
-    IconButton(onClick = {}) { Icon(icon, contentDescription = description) }
+private fun PlayerIconButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    onClick: () -> Unit,
+) {
+    IconButton(onClick = onClick) { Icon(icon, contentDescription = description) }
 }
 
 @Composable
@@ -218,3 +251,24 @@ private fun TrackButton(
         Text(if (value.isBlank()) label else "$label  $value")
     }
 }
+
+private fun Long.clock(): String {
+    val totalSeconds = (coerceAtLeast(0) / 1_000)
+    val hours = totalSeconds / 3_600
+    val minutes = (totalSeconds % 3_600) / 60
+    val seconds = totalSeconds % 60
+    return if (hours > 0) {
+        "%02d:%02d:%02d".format(hours, minutes, seconds)
+    } else {
+        "%02d:%02d".format(minutes, seconds)
+    }
+}
+
+private fun com.getair.video.PlaybackState.progressFraction(): Float {
+    val duration = timeline?.durationMillis ?: return 0f
+    if (duration <= 0) return 0f
+    return (positionMillis.toDouble() / duration).coerceIn(0.0, 1.0).toFloat()
+}
+
+private fun List<com.getair.video.MediaTrack>.selectedLabel(fallback: String): String =
+    firstOrNull { it.isDefault }?.label ?: firstOrNull()?.label ?: fallback

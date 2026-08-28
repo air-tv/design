@@ -10,12 +10,12 @@ kotlin {
 
 android {
     namespace = "com.getair.design"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.getair.design"
         minSdk = 28
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
     }
