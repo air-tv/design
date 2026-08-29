@@ -6,6 +6,7 @@ import com.getair.app.ui.model.IptvLiveInfo
 import com.getair.app.ui.model.IptvVodInfo
 import com.getair.app.ui.model.MediaItem
 import com.getair.app.ui.model.MediaKind
+import com.getair.app.ui.model.ProgrammeInfo
 import com.getair.app.ui.model.StremioInfo
 import com.getair.app.ui.model.TvPresentationSnapshot
 import com.getair.core.history.ContinueWatchingState
@@ -20,18 +21,14 @@ import com.getair.core.source.LocalSourceKind
 import com.getair.core.source.LocalSourceProfile
 import com.getair.core.source.LocalSourceState
 import com.getair.iptv.model.CategoryId
-import com.getair.iptv.model.CategoryKind
 import com.getair.iptv.model.ChannelId
 import com.getair.iptv.model.ChannelKind
 import com.getair.iptv.model.EpgChannelId
-import com.getair.iptv.model.EpgProgramme
 import com.getair.iptv.model.EpisodeId
-import com.getair.iptv.model.IptvCategory
-import com.getair.iptv.model.IptvChannel
-import com.getair.iptv.model.IptvEpisode
-import com.getair.iptv.model.IptvMovie
-import com.getair.iptv.model.IptvSeries
-import com.getair.iptv.model.IptvSeriesDetails
+import com.getair.iptv.model.IptvChannelMetadata
+import com.getair.iptv.model.IptvEpisodeMetadata
+import com.getair.iptv.model.IptvMovieMetadata
+import com.getair.iptv.model.IptvSeriesMetadata
 import com.getair.iptv.model.IptvSourceKind
 import com.getair.iptv.model.MovieId
 import com.getair.iptv.model.SeriesId
@@ -279,28 +276,25 @@ object StaticData {
             kind = MediaKind.Live,
             palette = palette,
             info = IptvLiveInfo(
-                channel = IptvChannel(
+                channel = IptvChannelMetadata(
                     id = channelId,
                     name = name,
-                    streamUrl = "https://mock.invalid/live/$number.m3u8",
                     source = IptvSourceKind.Xtream,
                     kind = ChannelKind.Live,
                     number = number.toDouble(),
                     categoryIds = listOf(categoryId),
                     epgChannelId = epgId,
                 ),
-                category = IptvCategory(categoryId, group, CategoryKind.Live),
-                streamFormat = "HLS",
-                now = EpgProgramme(
-                    channelId = epgId,
+                groupName = group,
+                now = ProgrammeInfo(
                     start = startInstant,
                     end = endInstant,
                     title = programme,
                     description = "Current programme synopsis from XMLTV EPG data.",
                 ),
                 upcoming = listOf(
-                    EpgProgramme(epgId, endInstant, laterEnd, "Following programme", description = "The next scheduled programme."),
-                    EpgProgramme(epgId, laterEnd, latestEnd, "Later", description = "Later programme from the guide."),
+                    ProgrammeInfo(endInstant, laterEnd, "Following programme", description = "The next scheduled programme."),
+                    ProgrammeInfo(laterEnd, latestEnd, "Later", description = "Later programme from the guide."),
                 ),
             ),
         )
@@ -318,16 +312,11 @@ object StaticData {
     ): MediaItem {
         val description = "Static IPTV ${kind.name.lowercase()} information for the design route."
         val categoryId = CategoryId("mock-${category.lowercase().replace(' ', '-')}")
-        val categoryContract = IptvCategory(
-            id = categoryId,
-            name = category,
-            kind = if (kind == MediaKind.Movie) CategoryKind.Movie else CategoryKind.Series,
-        )
         val movie = if (kind == MediaKind.Movie) {
-            IptvMovie(
+            IptvMovieMetadata(
                 id = MovieId(id),
                 name = title,
-                streamUrl = "https://mock.invalid/movie/$id.mkv",
+                source = IptvSourceKind.Xtream,
                 categoryIds = listOf(categoryId),
                 containerExtension = "mkv",
                 year = year,
@@ -337,23 +326,42 @@ object StaticData {
             )
         } else null
         val series = if (kind == MediaKind.Series) {
-            val seriesId = SeriesId(id)
-            IptvSeriesDetails(
-                series = IptvSeries(
-                    id = seriesId,
-                    name = title,
-                    categoryIds = listOf(categoryId),
-                    year = year,
-                    plot = description,
-                    genre = category,
-                    rating = rating.toDouble(),
-                ),
-                episodes = listOf(
-                    IptvEpisode(EpisodeId("$id-1-1"), seriesId, "Arrival", 1.0, 1.0, "https://mock.invalid/series/$id/1-1.mkv", "mkv", "The first episode in the provider response."),
-                    IptvEpisode(EpisodeId("$id-1-2"), seriesId, "Crossing", 1.0, 2.0, "https://mock.invalid/series/$id/1-2.mkv", "mkv", "The story moves beyond the city."),
-                ),
+            IptvSeriesMetadata(
+                id = SeriesId(id),
+                name = title,
+                categoryIds = listOf(categoryId),
+                year = year,
+                plot = description,
+                genre = category,
+                rating = rating.toDouble(),
             )
         } else null
+        val episodes = if (series != null) {
+            listOf(
+                IptvEpisodeMetadata(
+                    id = EpisodeId("$id-1-1"),
+                    seriesId = series.id,
+                    title = "Arrival",
+                    source = IptvSourceKind.Xtream,
+                    season = 1.0,
+                    episode = 1.0,
+                    containerExtension = "mkv",
+                    plot = "The first episode in the provider response.",
+                ),
+                IptvEpisodeMetadata(
+                    id = EpisodeId("$id-1-2"),
+                    seriesId = series.id,
+                    title = "Crossing",
+                    source = IptvSourceKind.Xtream,
+                    season = 1.0,
+                    episode = 2.0,
+                    containerExtension = "mkv",
+                    plot = "The story moves beyond the city.",
+                ),
+            )
+        } else {
+            emptyList()
+        }
         return MediaItem(
             id = id,
             title = title,
@@ -363,7 +371,8 @@ object StaticData {
             info = IptvVodInfo(
                 movie = movie,
                 series = series,
-                categoryContract = categoryContract,
+                episodeMetadata = episodes,
+                categoryName = category,
                 durationLabel = duration,
             ),
         )

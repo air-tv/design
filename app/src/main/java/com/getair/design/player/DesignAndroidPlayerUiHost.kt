@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 /** Opens only the local synthetic fixture; canonical UI never sees its URI or Media3. */
 class DesignAndroidPlayerUiHost(context: Context) : AndroidPlayerUiHost {
     private val factory = AndroidMedia3BackendFactory(context.applicationContext)
+    override val isAvailable: Boolean = true
 
     @Composable
     override fun rememberController(item: MediaItem): AndroidPlayerUiController {
