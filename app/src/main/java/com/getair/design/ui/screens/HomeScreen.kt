@@ -18,14 +18,17 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.dp
 import com.getair.design.model.MediaItem
-import com.getair.design.model.StaticData
 import com.getair.design.ui.components.MediaRow
 import com.getair.design.ui.components.RowCardStyle
 
 @Composable
 fun HomeScreen(
     onItemSelected: (MediaItem) -> Unit,
+    featured: List<MediaItem>,
     continueWatching: List<MediaItem>,
+    liveChannels: List<MediaItem>,
+    popularMovies: List<MediaItem>,
+    popularSeries: List<MediaItem>,
     sideNavigationFocusRequester: FocusRequester,
     contentEntryFocusRequester: FocusRequester,
     onContentFocused: (FocusRequester) -> Unit,
@@ -42,7 +45,7 @@ fun HomeScreen(
     ) {
         item(contentType = "FeaturedCarousel") {
             FeaturedCarousel(
-                items = StaticData.stremioMovies.take(5),
+                items = featured,
                 onItemSelected = onItemSelected,
                 downFocusRequester = continueWatchingFocusRequester,
                 leftFocusRequester = sideNavigationFocusRequester,
@@ -69,7 +72,7 @@ fun HomeScreen(
         item(contentType = "LiveTv") {
             MediaRow(
                 title = "Live TV — On now",
-                items = StaticData.liveChannels,
+                items = liveChannels,
                 cardStyle = RowCardStyle.Landscape,
                 onItemSelected = onItemSelected,
                 firstItemLeftFocusRequester = sideNavigationFocusRequester,
@@ -80,7 +83,7 @@ fun HomeScreen(
         item(contentType = "PopularMovies") {
             MediaRow(
                 title = "Popular movies",
-                items = StaticData.stremioMovies,
+                items = popularMovies,
                 cardStyle = RowCardStyle.Poster,
                 onItemSelected = onItemSelected,
                 firstItemLeftFocusRequester = sideNavigationFocusRequester,
@@ -91,7 +94,7 @@ fun HomeScreen(
         item(contentType = "PopularSeries") {
             MediaRow(
                 title = "Popular series",
-                items = StaticData.stremioSeries,
+                items = popularSeries,
                 cardStyle = RowCardStyle.Poster,
                 onItemSelected = onItemSelected,
                 firstItemLeftFocusRequester = sideNavigationFocusRequester,

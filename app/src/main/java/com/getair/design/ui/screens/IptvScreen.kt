@@ -47,7 +47,6 @@ import androidx.tv.material3.TabRow
 import androidx.tv.material3.Text
 import com.getair.design.model.IptvLiveInfo
 import com.getair.design.model.MediaItem
-import com.getair.design.model.StaticData
 import com.getair.design.model.clockRange
 import com.getair.iptv.model.EpgProgramme
 import com.getair.design.ui.IptvRoute
@@ -59,6 +58,9 @@ import com.getair.design.ui.theme.AirCardShape
 @Composable
 fun IptvScreen(
     onItemSelected: (MediaItem) -> Unit,
+    liveChannels: List<MediaItem>,
+    movies: List<MediaItem>,
+    series: List<MediaItem>,
     sideNavigationFocusRequester: FocusRequester,
     contentEntryFocusRequester: FocusRequester,
     onContentFocused: (FocusRequester) -> Unit,
@@ -120,15 +122,20 @@ fun IptvScreen(
         }
         Spacer(Modifier.height(24.dp))
         when (route) {
-            IptvRoute.Live -> LiveGuide(onItemSelected, sideNavigationFocusRequester, onContentFocused)
+            IptvRoute.Live -> LiveGuide(
+                channels = liveChannels,
+                onItemSelected = onItemSelected,
+                sideNavigationFocusRequester = sideNavigationFocusRequester,
+                onContentFocused = onContentFocused,
+            )
             IptvRoute.Series -> VodGrid(
-                StaticData.iptvSeries,
+                series,
                 onItemSelected,
                 sideNavigationFocusRequester,
                 onContentFocused,
             )
             IptvRoute.Movies -> VodGrid(
-                StaticData.iptvMovies,
+                movies,
                 onItemSelected,
                 sideNavigationFocusRequester,
                 onContentFocused,
@@ -139,11 +146,12 @@ fun IptvScreen(
 
 @Composable
 private fun LiveGuide(
+    channels: List<MediaItem>,
     onItemSelected: (MediaItem) -> Unit,
     sideNavigationFocusRequester: FocusRequester,
     onContentFocused: (FocusRequester) -> Unit,
 ) {
-    var selected by remember { mutableStateOf(StaticData.liveChannels.first()) }
+    var selected by remember(channels) { mutableStateOf(channels.firstOrNull()) }
     Row(
         Modifier.fillMaxSize().padding(start = 64.dp, end = 58.dp).focusGroup(),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
@@ -153,7 +161,7 @@ private fun LiveGuide(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(bottom = 48.dp),
         ) {
-            itemsIndexed(StaticData.liveChannels, key = { _, channel -> channel.id }) { index, channel ->
+            itemsIndexed(channels, key = { _, channel -> channel.id }) { index, channel ->
                 val info = channel.info as IptvLiveInfo
                 val channelFocusRequester = remember(channel.id) { FocusRequester() }
                 ListItem(
@@ -184,28 +192,35 @@ private fun LiveGuide(
                 )
             }
         }
-        val info = selected.info as IptvLiveInfo
-        Column(Modifier.weight(1f)) {
-            Text("Now on ${selected.title}", style = MaterialTheme.typography.headlineSmall)
-            Text(
-                "${info.now.clockRange()}  •  ${info.group}  •  ${info.streamFormat}",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 6.dp),
-            )
-            Text(
-                info.now.title,
-                style = MaterialTheme.typography.displaySmall,
-                modifier = Modifier.padding(top = 20.dp),
-            )
-            Text(
-                info.now.description.orEmpty(),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-            Text("Schedule", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 26.dp, bottom = 12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                ProgramCard(info.now, selected = true) { onItemSelected(selected) }
-                info.upcoming.forEach { ProgramCard(it, selected = false, onClick = {}) }
+        val selectedChannel = selected
+        if (selectedChannel != null) {
+            val info = selectedChannel.info as IptvLiveInfo
+            Column(Modifier.weight(1f)) {
+                Text("Now on ${selectedChannel.title}", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    "${info.now.clockRange()}  •  ${info.group}  •  ${info.streamFormat}",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+                Text(
+                    info.now.title,
+                    style = MaterialTheme.typography.displaySmall,
+                    modifier = Modifier.padding(top = 20.dp),
+                )
+                Text(
+                    info.now.description.orEmpty(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Text(
+                    "Schedule",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 26.dp, bottom = 12.dp),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    ProgramCard(info.now, selected = true) { onItemSelected(selectedChannel) }
+                    info.upcoming.forEach { ProgramCard(it, selected = false, onClick = {}) }
+                }
             }
         }
     }

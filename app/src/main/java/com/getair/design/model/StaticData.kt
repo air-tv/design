@@ -172,6 +172,24 @@ object StaticData {
         else -> slate
     }
 
+    val presentation = TvPresentationSnapshot(
+        householdState = householdState,
+        featured = stremioMovies.take(5),
+        liveChannels = liveChannels,
+        popularMovies = stremioMovies,
+        popularSeries = stremioSeries,
+        iptvMovies = iptvMovies,
+        iptvSeries = iptvSeries,
+        continueWatchingByProfile = householdState.profiles.associate { profile ->
+            profile.id to continueWatching(profile.id)
+        },
+        profilePalettes = householdState.profiles.associate { profile ->
+            profile.id to profilePalette(profile.id)
+        },
+        fallbackProfilePalette = slate,
+        sourceState = localSourceState,
+    )
+
     private fun watchProgress(item: MediaItem, percent: Int): WatchProgress = WatchProgress(
         content = OnDemandContentRef.Stremio(
             type = if (item.kind == MediaKind.Movie) "movie" else "series",

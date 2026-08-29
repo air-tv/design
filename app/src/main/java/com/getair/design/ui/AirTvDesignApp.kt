@@ -18,9 +18,9 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.LocalContentColor
 import com.getair.core.household.ProfilePreferences
 import com.getair.design.model.MediaItem
-import com.getair.design.model.StaticData
-import com.getair.design.ui.components.SideNavigation
+import com.getair.design.model.TvPresentationSnapshot
 import com.getair.design.ui.components.MainContentInset
+import com.getair.design.ui.components.SideNavigation
 import com.getair.design.ui.screens.HomeScreen
 import com.getair.design.ui.screens.InfoScreen
 import com.getair.design.ui.screens.IptvScreen
@@ -30,12 +30,15 @@ import com.getair.design.ui.screens.SettingsScreen
 import com.getair.design.ui.theme.AirTheme
 
 @Composable
-fun AirTvDesignApp(onExit: () -> Unit) {
-    var householdState by remember { mutableStateOf(StaticData.householdState) }
+fun AirTvDesignApp(
+    presentation: TvPresentationSnapshot,
+    onExit: () -> Unit,
+) {
+    var householdState by remember(presentation) { mutableStateOf(presentation.householdState) }
     AirTheme(oledMode = householdState.deviceSettings.oledBlack) {
         var route by remember { mutableStateOf(AppRoute.Home) }
         var previousRoute by remember { mutableStateOf(AppRoute.Home) }
-        var selectedItem by remember { mutableStateOf<MediaItem>(StaticData.projectHailMary) }
+        var selectedItem by remember(presentation) { mutableStateOf<MediaItem>(presentation.featured.first()) }
         var isSideNavigationFocused by remember { mutableStateOf(false) }
         var focusRequestEpoch by remember { mutableStateOf(0) }
         val contentEntryFocusRequester = remember { FocusRequester() }
@@ -85,17 +88,22 @@ fun AirTvDesignApp(onExit: () -> Unit) {
                     when (route) {
                         AppRoute.Home -> HomeScreen(
                             onItemSelected = ::showInfo,
-                            continueWatching = StaticData.continueWatching(
-                                requireNotNull(householdState.selectedProfileId),
-                            ),
+                            featured = presentation.featured,
+                            continueWatching = presentation.continueWatching(householdState.selectedProfileId),
+                            liveChannels = presentation.liveChannels,
+                            popularMovies = presentation.popularMovies,
+                            popularSeries = presentation.popularSeries,
                             sideNavigationFocusRequester = selectedDestinationFocusRequester,
                             contentEntryFocusRequester = contentEntryFocusRequester,
                             onContentFocused = { lastContentFocusRequester = it },
                         )
                         AppRoute.Iptv -> IptvScreen(
-                            ::showInfo,
-                            selectedDestinationFocusRequester,
-                            contentEntryFocusRequester,
+                            onItemSelected = ::showInfo,
+                            liveChannels = presentation.liveChannels,
+                            movies = presentation.iptvMovies,
+                            series = presentation.iptvSeries,
+                            sideNavigationFocusRequester = selectedDestinationFocusRequester,
+                            contentEntryFocusRequester = contentEntryFocusRequester,
                             onContentFocused = { lastContentFocusRequester = it },
                         )
                         AppRoute.Settings -> SettingsScreen(
@@ -104,7 +112,7 @@ fun AirTvDesignApp(onExit: () -> Unit) {
                             onContentFocused = { lastContentFocusRequester = it },
                             deviceSettings = householdState.deviceSettings,
                             profilePreferences = selectedPreferences,
-                            sourceState = StaticData.localSourceState,
+                            sourceState = presentation.sourceState,
                             onDeviceSettingsChange = { settings ->
                                 if (settings != householdState.deviceSettings) {
                                     householdState = householdState.copy(
@@ -130,6 +138,8 @@ fun AirTvDesignApp(onExit: () -> Unit) {
                             contentEntryFocusRequester,
                             onContentFocused = { lastContentFocusRequester = it },
                             profiles = householdState.profiles,
+                            profilePalettes = presentation.profilePalettes,
+                            fallbackProfilePalette = presentation.fallbackProfilePalette,
                             selectedProfileId = householdState.selectedProfileId,
                             onProfileSelected = { profileId ->
                                 if (profileId != householdState.selectedProfileId) {

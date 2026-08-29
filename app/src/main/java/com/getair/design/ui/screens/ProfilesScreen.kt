@@ -34,7 +34,6 @@ import androidx.tv.material3.Text
 import com.getair.core.household.HouseholdProfile
 import com.getair.core.household.HouseholdProfileId
 import com.getair.design.model.ArtworkPalette
-import com.getair.design.model.StaticData
 import com.getair.design.ui.components.ColorArtwork
 import com.getair.design.ui.theme.AirBorderWidth
 import com.getair.design.ui.theme.AirCardShape
@@ -45,6 +44,8 @@ fun ProfilesScreen(
     contentEntryFocusRequester: FocusRequester,
     onContentFocused: (FocusRequester) -> Unit,
     profiles: List<HouseholdProfile>,
+    profilePalettes: Map<HouseholdProfileId, ArtworkPalette>,
+    fallbackProfilePalette: ArtworkPalette,
     selectedProfileId: HouseholdProfileId?,
     onProfileSelected: (HouseholdProfileId) -> Unit,
 ) {
@@ -69,7 +70,7 @@ fun ProfilesScreen(
                 }
                 ProfileCard(
                     profile = profile,
-                    palette = StaticData.profilePalette(profile.id),
+                    palette = profilePalettes[profile.id] ?: fallbackProfilePalette,
                     selected = profile.id == selectedProfileId,
                     onClick = { onProfileSelected(profile.id) },
                     modifier = Modifier
