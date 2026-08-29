@@ -21,6 +21,7 @@ jobs:
           path: design
       - name: Check out public contract repositories
         run: |
+          git clone --depth 1 https://github.com/air-tv/app.git ../app
           git clone --depth 1 https://github.com/air-tv/air.git ../air
           git clone --depth 1 https://github.com/air-tv/stremio-addon-client.git ../stremio-addon-client
           git clone --depth 1 https://github.com/air-tv/iptv.git ../iptv
