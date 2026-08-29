@@ -1,6 +1,13 @@
-package com.getair.design.model
+package com.getair.design.fixtures
 
 import androidx.compose.ui.graphics.Color
+import com.getair.app.ui.model.ArtworkPalette
+import com.getair.app.ui.model.IptvLiveInfo
+import com.getair.app.ui.model.IptvVodInfo
+import com.getair.app.ui.model.MediaItem
+import com.getair.app.ui.model.MediaKind
+import com.getair.app.ui.model.StremioInfo
+import com.getair.app.ui.model.TvPresentationSnapshot
 import com.getair.core.history.ContinueWatchingState
 import com.getair.core.history.OnDemandContentRef
 import com.getair.core.history.WatchProgress

@@ -17,6 +17,13 @@ dependencyResolutionManagement {
 rootProject.name = "AirTvDesign"
 include(":app")
 
+includeBuild("../app") {
+    name = "air-app-build"
+    dependencySubstitution {
+        substitute(module("com.getair:air-app-shared")).using(project(":shared"))
+    }
+}
+
 listOf(
     "../air",
     "../stremio-addon-client",

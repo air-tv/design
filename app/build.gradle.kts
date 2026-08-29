@@ -37,6 +37,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.getair.app.shared)
     implementation(libs.getair.air)
     implementation(libs.getair.iptv)
     implementation(libs.getair.stremio.addon.client)
@@ -44,8 +45,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.tv.material)
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.compose.ui)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

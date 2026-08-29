@@ -1,6 +1,6 @@
 # Air TV Design
 
-An offline Android TV design application used to inspect Air's real Compose UI on an emulator or television. It deliberately contains no networking, persistence, image loading, provider data, or production business logic. The Player route alone runs Air's real Media3 adapter against a small copyright-free local corpus asset so surface composition and controls are exercised honestly.
+An offline Android TV fixture application used to inspect Air's canonical Compose UI on an emulator or television. The screens, focus policy, theme, presentation models, and player controls are owned by the sibling `app:shared` module; this repository contains only deterministic fixtures and platform test adapters. It deliberately contains no networking, persistence, image loading, provider data, or production business logic. The Player route alone runs Air's real Media3 adapter against a small copyright-free local corpus asset so surface composition and controls are exercised honestly.
 
 ## Routes
 
@@ -27,8 +27,9 @@ second UI history model.
 Every record is fictional, every URL uses `mock.invalid`, and this repository
 contains no provider credentials or addon configuration.
 
-`MainActivity` is the fixture host. It supplies one bounded
-`TvPresentationSnapshot` to the canonical UI root; screens receive only the
+`MainActivity` is the fixture host. An explicit `includeBuild("../app")`
+substitutes `com.getair:air-app-shared`, and the activity supplies one bounded
+`TvPresentationSnapshot` to that canonical UI root. Screens receive only the
 featured rows, live channels, VOD grids, profiles, palettes, source metadata,
 and continue-watching values they render. No screen reads `StaticData` or knows
 whether a value came from fixtures, a cache, or a real presenter. This keeps the
@@ -60,4 +61,6 @@ The sidebar and Challenge-details composition reference Google's CC BY 4.0 JetFi
 - [JetFit Figma community file](https://www.figma.com/community/file/1237433831695839696/jetfit-fitness-app)
 - [JetFit Android TV case study](https://developer.android.com/design/ui/tv/samples/jet-fit)
 
-Copied Inter/Lexend font files and upstream notices are retained in `THIRD_PARTY_LICENSES.md`.
+The canonical `app:shared` module owns the Inter/Lexend font resources used by
+the theme. Upstream design and fixture-media notices remain in
+`THIRD_PARTY_LICENSES.md`.
